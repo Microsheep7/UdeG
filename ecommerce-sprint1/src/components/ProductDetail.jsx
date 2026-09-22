@@ -1,18 +1,15 @@
 // ProductDetail.jsx
 // T-06: Crear estructura pantalla de detalle (HU-02) — Completado
-// T-07: Diseñar sección de información (HU-02) — En progreso (60%)
-// T-08: Mostrar nombre, precio, descripción, imágenes (HU-02) — No iniciado
-//   -> Por eso el nombre y precio SÍ se muestran (vienen del catálogo),
-//      pero la descripción/galería completas se marcan como pendientes,
-//      igual que reporta el Sprint Backlog.
-// T-09: Navegación catálogo → detalle — No iniciado
-//   -> El botón "Volver" aquí es una simulación local (useState en App.jsx),
-//      no la navegación final (ej. React Router) que contempla esa tarea.
+// T-07: Diseñar sección de información (HU-02) — Completado
+// T-08: Mostrar nombre, precio, descripción, imágenes (HU-02) — Completado
+// T-09: Implementar navegación catálogo → detalle (HU-02) — Completado
 
-import React from "react";
+import React, { useState } from "react";
 import "./ProductDetail.css";
 
 function ProductDetail({ product, onBack }) {
+  const [activeImage, setActiveImage] = useState(0);
+
   if (!product) return null;
 
   return (
@@ -22,17 +19,38 @@ function ProductDetail({ product, onBack }) {
       </button>
 
       <div className="detail__content">
-        <img className="detail__image" src={product.image} alt={product.name} />
+        <div className="detail__gallery">
+          <img
+            className="detail__image"
+            src={product.images[activeImage]}
+            alt={product.name}
+          />
+          {product.images.length > 1 && (
+            <div className="detail__thumbnails">
+              {product.images.map((img, index) => (
+                <img
+                  key={img}
+                  src={img}
+                  alt={`${product.name} ${index + 1}`}
+                  className={`detail__thumbnail ${index === activeImage ? "detail__thumbnail--active" : ""}`}
+                  onClick={() => setActiveImage(index)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="detail__info">
-          <span className="detail__badge">Sección de información — en progreso (60%)</span>
           <h2 className="detail__name">{product.name}</h2>
           <p className="detail__price">${product.price.toFixed(2)}</p>
-
-          <div className="detail__description">
-            <p>{product.description}</p>
-            <span className="detail__pending">🚧 Galería de imágenes múltiples: pendiente (T-08)</span>
-          </div>
+          <span
+            className={`detail__availability ${
+              product.available ? "detail__availability--in-stock" : "detail__availability--out"
+            }`}
+          >
+            {product.available ? "Disponible" : "Agotado"}
+          </span>
+          <p className="detail__description">{product.description}</p>
         </div>
       </div>
     </div>

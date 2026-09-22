@@ -5,6 +5,7 @@
   overflow: hidden;
   cursor: pointer;
   transition: box-shadow 0.15s ease, transform 0.15s ease;
+  position: relative;
 }
 
 .product-card:hover {
@@ -34,4 +35,15 @@
   margin: 0;
   font-size: 0.9rem;
   color: #444;
+}
+
+.product-card__unavailable {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #f2b4b4;
+  border-radius: 999px;
+  padding: 2px 8px;
 }

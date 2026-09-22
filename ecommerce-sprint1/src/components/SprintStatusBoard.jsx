@@ -1,25 +1,31 @@
 // SprintStatusBoard.jsx
-// Traducción visual del "Tablero del sprint" y el "Tablero de impedimentos"
-// del documento Ejecucion_Sprint_1.docx (estado al Día 5 / Jueves).
+// Traducción visual del tablero del sprint y del log de impedimentos
+// del documento Ejecucion_Sprint_1 (estado final, Día 15).
 
 import React from "react";
 import "./SprintStatusBoard.css";
 
 const columns = [
-  { title: "TO DO", items: ["T-04", "T-08", "T-09", "T-10", "T-11", "T-12", "T-13"] },
-  { title: "IN PROGRESS", items: ["T-05 (70%)", "T-07 (60%)"] },
-  { title: "DONE", items: ["T-01", "T-02", "T-06"] },
-  { title: "BLOQUEADO", items: ["T-03 (falta backend)"] },
+  { title: "TO DO", items: ["T-12", "T-13"] },
+  { title: "IN PROGRESS", items: ["T-10 (50%)", "T-11 (40%)"] },
+  {
+    title: "DONE",
+    items: ["T-01", "T-02", "T-03", "T-04", "T-05", "T-06", "T-07", "T-08", "T-09"],
+  },
+  { title: "BLOQUEADO", items: ["Ninguna (resuelta)"] },
 ];
 
 function SprintStatusBoard() {
   return (
     <div className="board">
-      <h2 className="board__title">Tablero del Sprint 1 — Día 5 (Jueves)</h2>
+      <h2 className="board__title">Tablero del Sprint 1 — Estado final (Día 15)</h2>
 
       <div className="board__columns">
         {columns.map((col) => (
-          <div key={col.title} className={`board__column board__column--${col.title.toLowerCase().replace(" ", "-")}`}>
+          <div
+            key={col.title}
+            className={`board__column board__column--${col.title.toLowerCase().replace(" ", "-")}`}
+          >
             <h3>{col.title}</h3>
             <ul>
               {col.items.map((item) => (
@@ -30,11 +36,10 @@ function SprintStatusBoard() {
         ))}
       </div>
 
-      <div className="board__impediment">
-        <strong>IMP-001 (Abierto):</strong> el backend no ha entregado el endpoint{" "}
-        <code>GET /products</code>. Bloquea T-03 (integración del catálogo). SM confirmó
-        disponibilidad en Staging el viernes 09:00; mientras tanto el equipo avanza con
-        HU-02 y QA en paralelo.
+      <div className="board__impediment board__impediment--resolved">
+        <strong>IMP-001 (Resuelto):</strong> el backend entregó el endpoint{" "}
+        <code>GET /products</code> el viernes 09:00, según lo previsto. Bloqueó T-03 por 2
+        días; el equipo avanzó en HU-02 en paralelo mientras se resolvía.
       </div>
     </div>
   );

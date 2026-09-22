@@ -1,12 +1,6 @@
 // Sprint1Simulation.jsx
-// Punto de entrada de la simulación. Úsalo como componente independiente
-// (impórtalo en tu App.js: import Sprint1Simulation from "./sprint1-simulacion/src/Sprint1Simulation";)
-// o copia estos archivos dentro de tu carpeta src/ existente.
-//
-// IMPORTANTE: la navegación catálogo -> detalle que ves aquí es una
-// simulación local con useState, NO la implementación real de T-09
-// (Implementar navegación catálogo → detalle), que sigue "No iniciado"
-// según el Sprint Backlog.
+// Punto de entrada del módulo. Combina el tablero de seguimiento, el
+// catálogo de productos y la vista de detalle con navegación entre ambos.
 
 import React, { useState } from "react";
 import SprintStatusBoard from "./components/SprintStatusBoard";

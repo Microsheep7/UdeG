@@ -69,3 +69,9 @@
   color: #7a1f1f;
   line-height: 1.5;
 }
+
+.board__impediment--resolved {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #14532d;
+}
