@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veraz Noticias</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap');
+  :root{
+    --paper:#faf9f5; --ink:#211f1b; --ink-soft:#5a564e;
+    --line:#ddd8cc; --teal:#2b5f63; --teal-dark:#1c4144;
+    --gold:#a97e2f; --alert:#a5442a; --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,sans-serif;line-height:1.5;}
+  h1,h2,h3{font-family:Lora,serif;font-weight:600;margin:0 0 .3em;}
+  a{color:var(--teal-dark);}
+  header{border-bottom:2px solid var(--ink);padding:20px 24px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;}
+  header h1{font-size:1.6rem;letter-spacing:.5px;}
+  header .tag{color:var(--ink-soft);font-size:.85rem;}
+  nav{display:flex;gap:8px;}
+  nav button{background:none;border:1px solid var(--line);padding:7px 14px;border-radius:3px;cursor:pointer;font:inherit;font-size:.85rem;}
+  nav button.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  main{max-width:820px;margin:0 auto;padding:28px 24px 80px;}
+  .empty{border:1px dashed var(--line);padding:30px;text-align:center;color:var(--ink-soft);border-radius:4px;}
+  .story{border-bottom:1px solid var(--line);padding:22px 0;cursor:pointer;}
+  .story:first-child{padding-top:0;}
+  .story h3{font-size:1.25rem;}
+  .meta{color:var(--ink-soft);font-size:.82rem;margin-bottom:6px;}
+  .badge{display:inline-block;font-size:.72rem;padding:2px 8px;border-radius:12px;margin-left:6px;}
+  .badge.verificada{background:#eef4ee;color:var(--teal-dark);border:1px solid var(--teal);}
+  .badge.pendiente{background:#f6efe3;color:var(--gold);border:1px solid var(--gold);}
+  .excerpt{color:var(--ink-soft);}
+  .detail{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:26px;}
+  .detail .meta{margin-bottom:14px;}
+  .body-text{white-space:pre-line;margin:16px 0;}
+  .sources{margin-top:20px;border-top:1px solid var(--line);padding-top:14px;}
+  .sources h4{font-family:Inter;font-size:.85rem;text-transform:none;color:var(--ink-soft);margin:0 0 8px;}
+  .sources ul{margin:0;padding-left:18px;}
+  .actions{margin-top:20px;display:flex;gap:10px;}
+  button.primary{background:var(--teal-dark);color:#fff;border:none;padding:9px 16px;border-radius:4px;cursor:pointer;font:inherit;}
+  button.secondary{background:none;border:1px solid var(--line);padding:9px 16px;border-radius:4px;cursor:pointer;font:inherit;}
+  form{display:flex;flex-direction:column;gap:14px;}
+  label{font-size:.85rem;color:var(--ink-soft);display:block;margin-bottom:4px;}
+  input,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:4px;font:inherit;background:#fff;}
+  textarea{min-height:110px;resize:vertical;}
+  fieldset{border:1px solid var(--line);border-radius:4px;padding:14px 16px;}
+  legend{font-size:.85rem;color:var(--ink-soft);padding:0 6px;}
+  .check{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;font-size:.9rem;}
+  .source-row{display:flex;gap:8px;}
+  .source-row input{flex:1;}
+  .add-source{align-self:flex-start;font-size:.82rem;background:none;border:none;color:var(--teal-dark);cursor:pointer;padding:0;}
+  .error{color:var(--alert);font-size:.85rem;border:1px solid var(--alert);background:#fbeeea;padding:8px 12px;border-radius:4px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:4px;font-size:.9rem;opacity:0;transition:opacity .25s;}
+  .toast.show{opacity:1;}
+  .modal-bg{position:fixed;inset:0;background:rgba(20,18,15,.45);display:flex;align-items:center;justify-content:center;}
+  .modal{background:#fff;border-radius:6px;padding:22px;max-width:360px;}
+  .modal .actions{justify-content:flex-end;}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Veraz Noticias</h1><div class="tag">Noticias locales verificadas y con contexto</div></div>
+  <nav>
+    <button id="nav-lector" class="active">Lector</button>
+    <button id="nav-periodista">Periodista</button>
+  </nav>
+</header>
+<main id="app"></main>
+<div id="toast" class="toast"></div>
+
+<script>
+const CRITERIOS = [
+  {id:'fuente', label:'Se verificó al menos una fuente confiable de la información.'},
+  {id:'contraste', label:'Se contrastó la versión con una segunda fuente u opinión.'},
+  {id:'redaccion', label:'La redacción evita afirmaciones sin sustento y lenguaje ambiguo.'},
+  {id:'fecha', label:'Se confirmó que los hechos reportados corresponden a información vigente.'},
+];
+
+const SEED = [
+  {id:1, titulo:'Vecinos de Analco reabren el mercado tras la reparación del techo',
+   cuerpo:'Después de tres meses de obras, el mercado municipal de Analco reabrió sus puertas este lunes. Los locatarios señalaron que el flujo de clientes se recuperó desde el primer día.\n\nEl ayuntamiento confirmó que la inversión provino de un fondo estatal para infraestructura de mercados públicos.',
+   autor:'Marisol Peña', fecha:'2026-09-10', verificada:true,
+   fuentes:[{nombre:'Ayuntamiento de Guadalajara, comunicado oficial', enlace:'https://guadalajara.gob.mx'}, {nombre:'Entrevista con locatarios del mercado', enlace:''}]},
+  {id:2, titulo:'Colectivo vecinal pide más luminarias en la colonia Oblatos',
+   cuerpo:'Un grupo de vecinos entregó una petición formal solicitando el reemplazo de luminarias dañadas en al menos ocho calles de la colonia.\n\nLa dependencia municipal indicó que evaluará la solicitud en la próxima sesión de obras públicas.',
+   autor:'Iván Reyes', fecha:'2026-09-15', verificada:true,
+   fuentes:[{nombre:'Petición vecinal (documento entregado al ayuntamiento)', enlace:''}]},
+];
+
+let noticias = JSON.parse(localStorage.getItem('veraz_noticias') || 'null') || SEED;
+let vista = 'lector';        // 'lector' | 'periodista'
+let pantalla = {tipo:'lista'}; // {tipo:'lista'} | {tipo:'detalle', id} | {tipo:'publicar'} | {tipo:'editar', id}
+
+function guardar(){ localStorage.setItem('veraz_noticias', JSON.stringify(noticias)); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
+function ir(p){ pantalla = p; render(); }
+
+document.getElementById('nav-lector').onclick = ()=>{ vista='lector'; document.getElementById('nav-lector').classList.add('active'); document.getElementById('nav-periodista').classList.remove('active'); ir({tipo:'lista'}); };
+document.getElementById('nav-periodista').onclick = ()=>{ vista='periodista'; document.getElementById('nav-periodista').classList.add('active'); document.getElementById('nav-lector').classList.remove('active'); ir({tipo:'lista'}); };
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  if(pantalla.tipo==='lista') app.appendChild(vistaLista());
+  else if(pantalla.tipo==='detalle') app.appendChild(vistaDetalle(pantalla.id));
+  else if(pantalla.tipo==='publicar') app.appendChild(formularioNoticia());
+  else if(pantalla.tipo==='editar') app.appendChild(formularioNoticia(pantalla.id));
+}
+
+// HU-01: listado y consulta de noticias
+function vistaLista(){
+  const wrap = document.createElement('div');
+  if(vista==='periodista'){
+    const btn = document.createElement('button');
+    btn.className='primary'; btn.textContent='Publicar noticia';
+    btn.style.marginBottom='18px';
+    btn.onclick=()=>ir({tipo:'publicar'});
+    wrap.appendChild(btn);
+  }
+  if(noticias.length===0){
+    const e=document.createElement('div'); e.className='empty'; e.textContent='Todavía no hay noticias publicadas.'; wrap.appendChild(e); return wrap;
+  }
+  [...noticias].sort((a,b)=>b.fecha.localeCompare(a.fecha)).forEach(n=>{
+    const el = document.createElement('div'); el.className='story';
+    el.innerHTML = `<h3>${escapeHTML(n.titulo)}
+      <span class="badge ${n.verificada?'verificada':'pendiente'}">${n.verificada?'Verificada':'Pendiente de verificación'}</span></h3>
+      <div class="meta">${n.autor} · ${n.fecha}</div>
+      <div class="excerpt">${escapeHTML(n.cuerpo.split('\n')[0]).slice(0,140)}…</div>`;
+    el.onclick=()=>ir({tipo:'detalle', id:n.id});
+    wrap.appendChild(el);
+  });
+  return wrap;
+}
+
+// HU-01 + HU-04: contenido completo y fuentes
+function vistaDetalle(id){
+  const n = noticias.find(x=>x.id===id);
+  const wrap = document.createElement('div');
+  const back = document.createElement('button'); back.className='secondary'; back.textContent='← Volver'; back.style.marginBottom='16px';
+  back.onclick=()=>ir({tipo:'lista'});
+  wrap.appendChild(back);
+
+  const det = document.createElement('div'); det.className='detail';
+  det.innerHTML = `<h2>${escapeHTML(n.titulo)}
+    <span class="badge ${n.verificada?'verificada':'pendiente'}">${n.verificada?'Verificada':'Pendiente de verificación'}</span></h2>
+    <div class="meta">${n.autor} · ${n.fecha}</div>
+    <div class="body-text">${escapeHTML(n.cuerpo)}</div>`;
+  const src = document.createElement('div'); src.className='sources';
+  src.innerHTML = `<h4>Fuentes</h4>` + (n.fuentes.length
+    ? `<ul>${n.fuentes.map(f=>`<li>${escapeHTML(f.nombre)}${f.enlace?` — <a href="${escapeHTML(f.enlace)}" target="_blank" rel="noopener">${escapeHTML(f.enlace)}</a>`:''}</li>`).join('')}</ul>`
+    : `<p style="color:var(--ink-soft)">No se registraron fuentes para esta noticia.</p>`);
+  det.appendChild(src);
+
+  if(vista==='periodista'){
+    const act = document.createElement('div'); act.className='actions';
+    const editBtn = document.createElement('button'); editBtn.className='primary'; editBtn.textContent='Editar noticia';
+    editBtn.onclick=()=>ir({tipo:'editar', id:n.id});
+    act.appendChild(editBtn);
+    det.appendChild(act);
+  }
+  wrap.appendChild(det);
+  return wrap;
+}
+
+// HU-02 (publicar) + HU-03 (criterios de verificación) + HU-04 (fuentes) + HU-05 (editar con confirmación)
+function formularioNoticia(editId){
+  const existente = editId ? noticias.find(x=>x.id===editId) : null;
+  const wrap = document.createElement('div');
+  const back = document.createElement('button'); back.className='secondary'; back.textContent='← Cancelar'; back.style.marginBottom='16px';
+  back.onclick=()=> editId ? ir({tipo:'detalle', id:editId}) : ir({tipo:'lista'});
+  wrap.appendChild(back);
+
+  const det = document.createElement('div'); det.className='detail';
+  det.innerHTML = `<h2>${existente?'Editar noticia':'Publicar noticia'}</h2>`;
+
+  const form = document.createElement('form');
+  let fuentes = existente ? existente.fuentes.map(f=>({...f})) : [{nombre:'', enlace:''}];
+  let errorBox = document.createElement('div');
+
+  form.innerHTML = `
+    <div><label>Título</label><input name="titulo" required value="${existente?escapeAttr(existente.titulo):''}"></div>
+    <div><label>Autor</label><input name="autor" required value="${existente?escapeAttr(existente.autor):(vista==='periodista'?'':'')}"></div>
+    <div><label>Contenido</label><textarea name="cuerpo" required>${existente?escapeHTML(existente.cuerpo):''}</textarea></div>
+    <fieldset>
+      <legend>Fuentes de información</legend>
+      <div id="fuentes-list"></div>
+      <button type="button" class="add-source" id="add-fuente">+ Agregar otra fuente</button>
+    </fieldset>
+    <fieldset>
+      <legend>Criterios de verificación y redacción</legend>
+      ${CRITERIOS.map(c=>`<label class="check"><input type="checkbox" name="crit-${c.id}" ${existente&&existente.verificada?'checked':''}> ${c.label}</label>`).join('')}
+    </fieldset>
+  `;
+
+  function renderFuentes(){
+    const list = form.querySelector('#fuentes-list');
+    list.innerHTML='';
+    fuentes.forEach((f,i)=>{
+      const row=document.createElement('div'); row.className='source-row'; row.style.marginBottom='8px';
+      row.innerHTML = `<input placeholder="Nombre de la fuente" value="${escapeAttr(f.nombre)}" data-f="nombre" data-i="${i}">
+        <input placeholder="Enlace o referencia (opcional)" value="${escapeAttr(f.enlace)}" data-f="enlace" data-i="${i}">`;
+      list.appendChild(row);
+    });
+  }
+  renderFuentes();
+  form.addEventListener('input', e=>{
+    const i=e.target.getAttribute('data-i'), f=e.target.getAttribute('data-f');
+    if(i!==null) fuentes[i][f]=e.target.value;
+  });
+  form.querySelector('#add-fuente').onclick=()=>{ fuentes.push({nombre:'',enlace:''}); renderFuentes(); };
+
+  const submitBtn = document.createElement('button');
+  submitBtn.type='submit'; submitBtn.className='primary';
+  submitBtn.textContent = existente ? 'Guardar cambios' : 'Publicar noticia';
+  form.appendChild(document.createElement('div')).appendChild(errorBox);
+  form.appendChild(submitBtn);
+
+  form.onsubmit = e=>{
+    e.preventDefault();
+    errorBox.textContent=''; errorBox.className='';
+    const data = new FormData(form);
+    const titulo = data.get('titulo').trim(), autor = data.get('autor').trim(), cuerpo = data.get('cuerpo').trim();
+    const fuentesValidas = fuentes.filter(f=>f.nombre.trim());
+    // HU-03: no permite publicar/guardar si faltan datos obligatorios de verificación
+    const criteriosOK = CRITERIOS.every(c=>data.get('crit-'+c.id));
+    if(!titulo||!autor||!cuerpo){
+      errorBox.className='error'; errorBox.textContent='Completa título, autor y contenido antes de continuar.'; return;
+    }
+    if(!criteriosOK){
+      errorBox.className='error';
+      errorBox.textContent='No se puede publicar: faltan criterios de verificación y redacción por confirmar.';
+      return;
+    }
+    const guardarNoticia = ()=>{
+      if(existente){
+        Object.assign(existente, {titulo, autor, cuerpo, fuentes:fuentesValidas, verificada:true});
+        guardar(); toast('Cambios guardados.'); ir({tipo:'detalle', id:existente.id});
+      } else {
+        const nueva = {id:Date.now(), titulo, autor, cuerpo, fuentes:fuentesValidas, verificada:true, fecha:new Date().toISOString().slice(0,10)};
+        noticias.push(nueva); guardar(); toast('Noticia publicada.'); ir({tipo:'detalle', id:nueva.id});
+      }
+    };
+    // HU-05: confirmación antes de guardar cambios en una noticia ya publicada
+    if(existente) confirmar('¿Guardar los cambios en esta noticia publicada?', guardarNoticia);
+    else guardarNoticia();
+  };
+
+  det.appendChild(form);
+  wrap.appendChild(det);
+  return wrap;
+}
+
+function confirmar(msg, onOk){
+  const bg = document.createElement('div'); bg.className='modal-bg';
+  bg.innerHTML = `<div class="modal"><p>${escapeHTML(msg)}</p>
+    <div class="actions"><button class="secondary" id="c-no">Cancelar</button><button class="primary" id="c-yes">Confirmar</button></div></div>`;
+  document.body.appendChild(bg);
+  bg.querySelector('#c-no').onclick=()=>bg.remove();
+  bg.querySelector('#c-yes').onclick=()=>{ bg.remove(); onOk(); };
+}
+
+function escapeHTML(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function escapeAttr(s){ return escapeHTML(s); }
+
+render();
+</script>
+</body>
+</html>
